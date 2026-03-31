@@ -2,12 +2,25 @@ import TopNav from "@/components/TopNav";
 import CodePanel from "@/components/CodePanel";
 import AssetPanel from "@/components/AssetPanel";
 import SyncButton from "@/components/SyncButton";
+import cosmiqLogo from "@/assets/cosmiq-logo.png";
 
 const Index = () => (
   <div className="min-h-screen bg-space relative overflow-hidden flex flex-col">
     {/* Watermark Logo */}
-    <div className="watermark-logo top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 whitespace-nowrap">
-      CosmIQ
+    <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
+      <img
+        src={cosmiqLogo}
+        alt=""
+        className="w-[60vw] max-w-[500px] select-none"
+        style={{
+          opacity: 0.1,
+          filter: "blur(4px)",
+          WebkitFilter: "blur(4px)",
+        }}
+        draggable={false}
+      />
+      {/* Faint cyan glow behind logo */}
+      <div className="absolute w-[40vw] h-[40vw] max-w-[400px] max-h-[400px] rounded-full bg-primary/[0.06] blur-[80px]" />
     </div>
 
     {/* Ambient glow orbs */}
