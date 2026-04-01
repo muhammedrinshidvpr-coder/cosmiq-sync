@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import Receiver from "./pages/Receiver.tsx";
 import NotFound from "./pages/NotFound.tsx";
-
+import Workspace from "./pages/Workspace";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -17,6 +17,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/space/:id" element={<Workspace />} />
           <Route path="/receive" element={<Receiver />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

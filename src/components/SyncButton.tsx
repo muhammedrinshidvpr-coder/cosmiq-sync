@@ -1,22 +1,52 @@
 import { useState } from "react";
 import { Zap } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+
+interface SyncButtonProps {
+  codeContent?: string;
+  imageUrl?: string | null;
+}
 
 const generateHexKey = () => {
-  const hex = () => Math.floor(Math.random() * 256).toString(16).toUpperCase().padStart(2, "0");
+  const hex = () =>
+    Math.floor(Math.random() * 256)
+      .toString(16)
+      .toUpperCase()
+      .padStart(2, "0");
   return `${hex()}-${hex()}${hex()}`;
 };
 
-const SyncButton = () => {
+const SyncButton = ({ codeContent, imageUrl }: SyncButtonProps) => {
   const [syncKey, setSyncKey] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     setIsGenerating(true);
     setSyncKey(null);
-    setTimeout(() => {
-      setSyncKey(generateHexKey());
+
+    const newKey = generateHexKey();
+
+    try {
+      // Fire the payload to Supabase
+      const { error } = await supabase.from("sync_payloads").insert([
+        {
+          sync_key: newKey,
+          code_content:
+            codeContent || "// TKM Lab Test Protocol - CosmIQ Sync is LIVE!",
+          image_url: imageUrl || null,
+        },
+      ]);
+
+      if (error) throw error;
+
+      // If successful, show the key to the user
+      setSyncKey(newKey);
+    } catch (error) {
+      console.error("Payload failed to launch:", error);
+      alert("Database sync failed. Check your Supabase connection.");
+    } finally {
       setIsGenerating(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -54,10 +84,10 @@ const SyncButton = () => {
             </span>
           </div>
           <button
-            onClick={handleGenerate}
+            onClick={() => setSyncKey(null)}
             className="mt-2 text-[10px] font-display tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase"
           >
-            Regenerate
+            Acknowledge & Clear
           </button>
         </div>
       )}
