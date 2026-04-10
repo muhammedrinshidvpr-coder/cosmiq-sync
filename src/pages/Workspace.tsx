@@ -9,6 +9,7 @@ import {
   Download,
   Loader2,
   Clock,
+  Check,
 } from "lucide-react";
 
 interface WorkspaceItem {
@@ -28,6 +29,7 @@ const Workspace = () => {
   const [items, setItems] = useState<WorkspaceItem[]>([]);
   const [isSubmittingCode, setIsSubmittingCode] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const fetchItems = async () => {
     const { data, error } = await supabase
@@ -51,6 +53,26 @@ const Workspace = () => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
+  // --- VS CODE TAB EMULATOR ---
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const target = e.target as HTMLTextAreaElement;
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+
+      // Inject two spaces exactly where the cursor is
+      const newCode =
+        codeSnippet.substring(0, start) + "  " + codeSnippet.substring(end);
+      setCodeSnippet(newCode);
+
+      // Put the cursor back in the right spot
+      requestAnimationFrame(() => {
+        target.selectionStart = target.selectionEnd = start + 2;
+      });
+    }
+  };
+
   // --- CODE HANDLER ---
   const handleSendCode = async () => {
     if (!codeSnippet.trim()) return;
@@ -70,6 +92,38 @@ const Workspace = () => {
     } finally {
       setIsSubmittingCode(false);
     }
+  };
+
+  // --- DOWNLOAD AS FILE HANDLER ---
+  const downloadCode = (content: string) => {
+    // 1. Ask the user what they want to name the file
+    const fileName = prompt(
+      "Name your file (e.g., experiment1.c, main.py, lab.txt):",
+      "code.txt",
+    );
+
+    // 2. If they click cancel, stop the function
+    if (!fileName) return;
+
+    // 3. Create and download the file with their custom name
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName; // Uses their custom name!
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // --- COPY HANDLER ---
+  const copyToClipboard = (text: string, itemId: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(itemId);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   // --- IMAGE HANDLER ---
@@ -110,17 +164,14 @@ const Workspace = () => {
 
   const handleDestroy = async () => {
     try {
-      // 1. Identify all physical images in this room
       const imagesToDelete = items.filter((i) => i.item_type === "image");
 
       if (imagesToDelete.length > 0) {
-        // Extract just the file names from the public URLs
         const fileNames = imagesToDelete.map((item) => {
           const parts = item.content.split("/");
-          return parts[parts.length - 1]; // Gets "9RMUH-1704123456.png"
+          return parts[parts.length - 1];
         });
 
-        // 2. Tell the Supabase Storage drive to delete the physical files
         const { error: storageError } = await supabase.storage
           .from("workspace_images")
           .remove(fileNames);
@@ -129,17 +180,11 @@ const Workspace = () => {
           console.error("Storage cleanup failed:", storageError);
       }
 
-      // 3. Now nuke the database room (which cascades to text/code rows)
       await supabase.from("active_workspaces").delete().eq("room_code", id);
       navigate("/");
     } catch (error) {
       console.error("Failed to destroy room:", error);
     }
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    alert("Copied to clipboard!");
   };
 
   const codeItems = items.filter((i) => i.item_type === "code");
@@ -158,13 +203,23 @@ const Workspace = () => {
               Active Room: <span className="text-white font-bold">{id}</span>
             </p>
           </div>
-          <button
-            onClick={handleDestroy}
-            className="flex items-center gap-2 bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 px-6 py-3 rounded-xl font-mono-space text-[10px] md:text-xs tracking-[0.2em] transition-all uppercase"
-          >
-            <Trash2 size={14} />
-            Destroy Workspace
-          </button>
+
+          {/* Action Buttons Container */}
+          <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+            <button
+              onClick={() => window.print()}
+              className="w-full md:w-auto flex justify-center items-center gap-2 bg-white/10 text-white border border-white/20 hover:bg-white/20 px-6 py-3 rounded-xl font-mono-space text-[10px] md:text-xs tracking-[0.2em] transition-all uppercase"
+            >
+              Generate PDF
+            </button>
+            <button
+              onClick={handleDestroy}
+              className="w-full md:w-auto flex justify-center items-center gap-2 bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 px-6 py-3 rounded-xl font-mono-space text-[10px] md:text-xs tracking-[0.2em] transition-all uppercase"
+            >
+              <Trash2 size={14} />
+              Destroy Workspace
+            </button>
+          </div>
         </header>
 
         {/* DASHBOARD COLUMNS */}
@@ -179,7 +234,8 @@ const Workspace = () => {
               <textarea
                 value={codeSnippet}
                 onChange={(e) => setCodeSnippet(e.target.value)}
-                placeholder="Paste code here..."
+                onKeyDown={handleKeyDown}
+                placeholder="Paste code here (Tab key enabled)..."
                 className="w-full bg-black/40 border border-primary/20 rounded-lg p-4 font-mono text-sm text-primary/90 focus:outline-none focus:border-primary/60 resize-none h-24 custom-scrollbar"
               />
               <button
@@ -207,8 +263,8 @@ const Workspace = () => {
                     key={item.id}
                     className="bg-black/40 border border-primary/10 rounded-lg p-4 group relative flex flex-col gap-2"
                   >
-                    {/* NEW TIMESTAMP HEADER */}
-                    <div className="flex justify-between items-center opacity-60 border-b border-primary/10 pb-2 mb-1">
+                    {/* HIDDEN IN PRINT: Timestamp Header */}
+                    <div className="print:hidden flex justify-between items-center opacity-60 border-b border-primary/10 pb-2 mb-3">
                       <span className="text-[9px] font-mono-space tracking-[0.2em] uppercase text-primary/70">
                         Protocol Logged
                       </span>
@@ -217,15 +273,40 @@ const Workspace = () => {
                       </span>
                     </div>
 
-                    <pre className="font-mono text-xs text-white/80 whitespace-pre-wrap overflow-x-auto">
-                      {item.content}
+                    {/* THE CLEAN CODE BOX WITH LINE NUMBERS */}
+                    <pre className="font-mono text-xs text-white/80 print:text-black whitespace-pre-wrap overflow-x-auto">
+                      {item.content.split("\n").map((line, index) => (
+                        <div key={index} className="flex gap-4 print:gap-6">
+                          <span className="text-muted-foreground/30 print:text-gray-400 select-none text-right w-6 shrink-0">
+                            {index + 1}
+                          </span>
+                          <span className="break-all">{line || " "}</span>
+                        </div>
+                      ))}
                     </pre>
-                    <button
-                      onClick={() => copyToClipboard(item.content)}
-                      className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 p-2 bg-primary/20 hover:bg-primary/40 rounded text-primary transition-all"
-                    >
-                      <Copy size={14} />
-                    </button>
+
+                    {/* ACTION BUTTONS (Download & Copy) */}
+                    <div className="absolute bottom-4 right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all">
+                      <button
+                        onClick={() => downloadCode(item.content)}
+                        className="p-2 bg-primary/20 hover:bg-primary/40 rounded text-primary transition-all"
+                        title="Download as File"
+                      >
+                        <Download size={14} />
+                      </button>
+
+                      <button
+                        onClick={() => copyToClipboard(item.content, item.id)}
+                        className="p-2 bg-primary/20 hover:bg-primary/40 rounded text-primary transition-all"
+                        title="Copy to Clipboard"
+                      >
+                        {copiedId === item.id ? (
+                          <Check size={14} />
+                        ) : (
+                          <Copy size={14} />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
@@ -270,7 +351,6 @@ const Workspace = () => {
                     key={item.id}
                     className="bg-black/40 border border-primary/10 rounded-lg p-3 group relative flex flex-col gap-2"
                   >
-                    {/* NEW TIMESTAMP HEADER */}
                     <div className="flex justify-between items-center opacity-60 pb-1 px-1">
                       <span className="text-[9px] font-mono-space tracking-[0.2em] uppercase text-primary/70">
                         Asset Uploaded
