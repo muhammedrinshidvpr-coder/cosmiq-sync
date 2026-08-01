@@ -211,6 +211,9 @@ const Index = () => {
             © {new Date().getFullYear()} • Engineered for speed
           </div>
         </div>
+        <div className="text-center mt-4 text-[10px] font-mono-space tracking-[0.2em] text-muted-foreground/40 uppercase">
+          Created by Muhammed Rinshid V P
+        </div>
       </footer>
 
       {/* BACKGROUND EFFECTS */}
