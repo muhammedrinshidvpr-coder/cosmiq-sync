@@ -30,6 +30,8 @@ const Workspace = () => {
   const [isSubmittingCode, setIsSubmittingCode] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<Date | null>(null);
+  const [timeLeft, setTimeLeft] = useState("");
 
   const fetchItems = async () => {
     const { data, error } = await supabase
@@ -42,10 +44,50 @@ const Workspace = () => {
     if (error) console.error("Fetch error:", error);
   };
 
+  const fetchWorkspaceMeta = async () => {
+    const { data, error } = await supabase
+      .from("active_workspaces")
+      .select("created_at")
+      .eq("room_code", id)
+      .single();
+
+    if (data) {
+      const createdAt = new Date(data.created_at);
+      setExpiresAt(new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000));
+    }
+    if (error) console.error("Workspace meta fetch error:", error);
+  };
+
   useEffect(() => {
     fetchItems();
+    fetchWorkspaceMeta();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // --- SELF-DESTRUCT COUNTDOWN ---
+  useEffect(() => {
+    if (!expiresAt) return;
+
+    const tick = () => {
+      const diff = expiresAt.getTime() - Date.now();
+
+      if (diff <= 0) {
+        setTimeLeft("Expired");
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+    };
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [expiresAt]);
 
   // --- TIME FORMATTER ---
   const formatTime = (dateString: string) => {
@@ -202,6 +244,12 @@ const Workspace = () => {
             <p className="font-mono-space text-muted-foreground text-sm tracking-[0.2em] uppercase mt-1">
               Active Room: <span className="text-white font-bold">{id}</span>
             </p>
+            {timeLeft && (
+              <p className="font-mono-space text-[10px] text-destructive/70 tracking-[0.15em] uppercase mt-1 flex items-center gap-1">
+                <Clock size={10} />
+                Self-destructs in {timeLeft}
+              </p>
+            )}
           </div>
 
           {/* Action Buttons Container */}

@@ -21,7 +21,7 @@ Engineering students constantly need to move code protocols, lab outputs, and sc
 ### Key Features
 * **Zero-Auth Architecture:** Bypasses traditional login friction. Generate a random 5-digit session code on the sender device and enter it on the receiver to instantly connect.
 * **Real-Time Sync:** Drop code snippets or upload image assets and watch them appear instantly on the connected device.
-* **Auto-Destructing Rooms:** Built with a PostgreSQL `pg_cron` scheduled job that acts as a digital janitor. After 24 hours, the server automatically vaporizes the room, cascading the deletion to all associated text and media files in the storage bucket.
+* **Auto-Destructing Rooms:** Built with a PostgreSQL `pg_cron` scheduled job that acts as a digital janitor. After 1 week, the server automatically vaporizes the room, cascading the deletion to all associated text and media files in the storage bucket.
 
 ---
 

@@ -87,7 +87,7 @@ const Index = () => {
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
           The frictionless, burner workspace built for engineering students.
           Drop your lab code, sync your assets, and walk away. Everything
-          auto-destructs in 24 hours.
+          auto-destructs in 1 week.
         </p>
       </header>
 
@@ -176,7 +176,7 @@ const Index = () => {
           </h3>
           <p className="text-xs text-muted-foreground leading-relaxed">
             Never leave your code on a public lab PC. Workspaces vanish
-            automatically after 24 hours.
+            automatically after 1 week.
           </p>
         </div>
 
