@@ -30,6 +30,9 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
+    --brand: 24 95% 53%;
+    --brand-foreground: 20 14% 4%;
+
     --border: 188 80% 30%;
     --input: 220 30% 15%;
     --ring: 188 100% 50%;

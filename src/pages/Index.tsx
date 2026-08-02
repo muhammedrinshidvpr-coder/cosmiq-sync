@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap, LogIn, Shield, Timer, Globe } from "lucide-react";
+import { Zap, LogIn, Shield, Timer, Globe, ArrowUpRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 const Index = () => {
@@ -45,7 +45,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center relative overflow-hidden text-white font-sans">
       {/* TOP NAVIGATION */}
-      <nav className="w-full max-w-6xl mx-auto px-6 py-8 flex justify-between items-center z-10">
+      <nav className="w-full max-w-6xl mx-auto px-6 py-8 flex flex-wrap justify-between items-center gap-4 z-10">
         <div className="flex items-center gap-3">
           <img
             src="/sync-logo.png"
@@ -57,21 +57,35 @@ const Index = () => {
           </span>
         </div>
 
-        <a
-          href="https://www.cosmiqproject.com"
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
-        >
-          <img
-            src="/main-logo.png"
-            alt="CosmIQ Academy"
-            className="w-5 h-5 rounded-full"
-          />
-          <span className="text-[10px] font-mono-space tracking-[0.2em] text-white/70 group-hover:text-white uppercase">
-            By CosmIQ
-          </span>
-        </a>
+        <div className="flex items-center gap-3 flex-wrap justify-end">
+          <a
+            href="https://www.cosmiqproject.com"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+          >
+            <img
+              src="/main-logo.png"
+              alt="CosmIQ Academy"
+              className="w-5 h-5 rounded-full"
+            />
+            <span className="text-[10px] font-mono-space tracking-[0.2em] text-white/70 group-hover:text-white uppercase">
+              By CosmIQ
+            </span>
+          </a>
+
+          <a
+            href="https://muhammedrinshidvpr-coder.github.io/rinshid-portfolio/"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-brand text-brand-foreground font-bold hover:bg-brand/90 hover:scale-[1.03] transition-all shadow-[0_0_20px_hsl(var(--brand)/0.35)] hover:shadow-[0_0_30px_hsl(var(--brand)/0.55)]"
+          >
+            <span className="text-[10px] font-mono-space tracking-[0.2em] uppercase">
+              Meet the Developer
+            </span>
+            <ArrowUpRight size={14} />
+          </a>
+        </div>
       </nav>
 
       {/* HERO SECTION */}
